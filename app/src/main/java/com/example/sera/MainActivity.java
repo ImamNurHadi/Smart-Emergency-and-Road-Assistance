@@ -15,6 +15,15 @@ import android.os.VibrationEffect;
 import android.media.MediaPlayer;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import android.view.View;
+
+
+import android.telephony.SmsManager;
+import android.widget.Toast;
+import android.Manifest;
+import android.content.pm.PackageManager;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,9 +40,13 @@ public class MainActivity extends AppCompatActivity {
     private SensorManager sensorManager;
     private Sensor gyroscope, magneticSensor, accelerometerSensor, barometer;
 
+
     // Sensor data arrays for orientation calculation
     private float[] gravityValues = new float[3];
     private float[] magneticValues = new float[3];
+
+    private final String PHONE_NUMBER = "089688276157";
+    private final String HELP_MESSAGE = "Help, I'm on North";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +60,9 @@ public class MainActivity extends AppCompatActivity {
         textZ = findViewById(R.id.textZ);
         directionText = findViewById(R.id.directionText);
         barometerText = findViewById(R.id.barometerText);
+
+        // Request SMS permissions
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, PackageManager.PERMISSION_GRANTED);
 
         // Initialize Vibrator
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -243,4 +259,26 @@ public class MainActivity extends AppCompatActivity {
             // Not used in this example
         }
     };
+
+    private void sendSmsIfPermissionGranted() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+            sendHelpSms();
+        } else {
+            Toast.makeText(this, "SMS permission not granted!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void sendTestSms(    View view) {
+        sendSmsIfPermissionGranted();
+    }
+
+    private void sendHelpSms() {
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(PHONE_NUMBER, null, HELP_MESSAGE, null, null);
+            Toast.makeText(this, "Help message sent to " + PHONE_NUMBER, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
 }

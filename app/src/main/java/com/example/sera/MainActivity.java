@@ -128,6 +128,14 @@ public class MainActivity extends AppCompatActivity {
             int temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
             float celsiusTemperature = temperature / 10.0f; // Convert to Celsius
             temperatureText.setText("Battery Temperature: " + celsiusTemperature + "°C");
+
+            if(celsiusTemperature > 40)
+            {
+                if(mediaPlayer != null && !mediaPlayer.isPlaying())
+                {
+                    mediaPlayer.start();
+                }
+            }
         }
     };
 
@@ -155,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 System.arraycopy(event.values, 0, magneticValues, 0, event.values.length);
             }
 
+
             // Calculate orientation if we have both accelerometer and magnetic sensor data
             if (gravityValues != null && magneticValues != null) {
                 float[] rotationMatrix = new float[9];
@@ -172,11 +181,6 @@ public class MainActivity extends AppCompatActivity {
                     directionText.setText("North");
                 } else if (azimuth >= 45 && azimuth < 135) {
                     directionText.setText("East");
-
-                    // Play ringtone if direction is East
-                    if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
-                        mediaPlayer.start();
-                    }
                 } else if (azimuth >= 135 && azimuth < 225) {
                     directionText.setText("South");
                 } else if (azimuth >= 225 && azimuth < 315) {

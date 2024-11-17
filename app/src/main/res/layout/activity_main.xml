@@ -1,0 +1,60 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <!-- Battery Temperature -->
+    <TextView
+        android:id="@+id/temperatureText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Battery Temperature"
+        android:textSize="18sp"
+        android:layout_margin="8dp" />
+
+    <!-- Gyroscope Readings -->
+    <TextView
+        android:id="@+id/textX"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="X: "
+        android:textSize="18sp"
+        android:layout_margin="8dp" />
+
+    <TextView
+        android:id="@+id/textY"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Y: "
+        android:textSize="18sp"
+        android:layout_margin="8dp" />
+
+    <TextView
+        android:id="@+id/textZ"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Z: "
+        android:textSize="18sp"
+        android:layout_margin="8dp" />
+
+    <!-- Magnetic Direction -->
+    <TextView
+        android:id="@+id/directionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Direction"
+        android:textSize="18sp"
+        android:layout_margin="8dp" />
+
+    <!-- Barometer Pressure -->
+    <TextView
+        android:id="@+id/barometerText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pressure"
+        android:textSize="18sp"
+        android:layout_margin="8dp" />
+
+</LinearLayout>

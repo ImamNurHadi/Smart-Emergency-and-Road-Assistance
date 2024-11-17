@@ -12,6 +12,7 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
+import android.media.MediaPlayer;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView barometerText;
     // Vibrator instance
     private Vibrator vibrator;
+    private MediaPlayer mediaPlayer;
 
     // Sensors and SensorManager
     private SensorManager sensorManager;
@@ -48,6 +50,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Vibrator
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        // Initialize MediaPlayer with the sound file
+        mediaPlayer = MediaPlayer.create(this, R.raw.cina);
 
         // Register battery temperature receiver
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -89,6 +94,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        // Release MediaPlayer resources
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+
         // Unregister battery receiver
         unregisterReceiver(batteryReceiver);
     }
@@ -112,13 +124,49 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                System.arraycopy(event.values, 0, gravityValues, 0, event.values.length);
+            } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+                System.arraycopy(event.values, 0, magneticValues, 0, event.values.length);
+            }
 
-            textX.setText("X : " + x + " rad/s");
-            textY.setText("Y : " + y + " rad/s");
-            textZ.setText("Z : " + z + " rad/s");
+            // Calculate orientation if we have both accelerometer and magnetic sensor data
+            if (gravityValues != null && magneticValues != null) {
+                float[] rotationMatrix = new float[9];
+                float[] orientationAngles = new float[3];
+
+                SensorManager.getRotationMatrix(rotationMatrix, null, gravityValues, magneticValues);
+                SensorManager.getOrientation(rotationMatrix, orientationAngles);
+
+                // Get the azimuth angle (rotation around the Z-axis) in degrees
+                float azimuth = (float) Math.toDegrees(orientationAngles[0]);
+                azimuth = (azimuth + 360) % 360; // Normalize to 0-360 degrees
+
+                // Determine direction based on azimuth
+                if (azimuth >= 315 || azimuth < 45) {
+                    directionText.setText("North");
+                } else if (azimuth >= 45 && azimuth < 135) {
+                    directionText.setText("East");
+
+                    // Play ringtone if direction is East
+                    if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+                        mediaPlayer.start();
+                    }
+                } else if (azimuth >= 135 && azimuth < 225) {
+                    directionText.setText("South");
+                } else if (azimuth >= 225 && azimuth < 315) {
+                    directionText.setText("West");
+
+                    // Trigger vibration if direction is West
+                    if (vibrator != null && vibrator.hasVibrator()) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+                        } else {
+                            vibrator.vibrate(500); // Fallback for devices below API 26
+                        }
+                    }
+                }
+            }
         }
     };
 

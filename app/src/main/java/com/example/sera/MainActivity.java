@@ -122,8 +122,17 @@ public class MainActivity extends AppCompatActivity {
             // Not used in this example
         }
 
+
         @Override
         public void onSensorChanged(SensorEvent event) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            textX.setText("X : " + x + " rad/s");
+            textY.setText("Y : " + y + " rad/s");
+            textZ.setText("Z : " + z + " rad/s");
+
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 System.arraycopy(event.values, 0, gravityValues, 0, event.values.length);
             } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {

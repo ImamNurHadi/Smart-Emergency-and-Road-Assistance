@@ -8,11 +8,13 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
 import android.media.MediaPlayer;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -23,6 +25,12 @@ import android.telephony.SmsManager;
 import android.widget.Toast;
 import android.Manifest;
 import android.content.pm.PackageManager;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -40,13 +48,16 @@ public class MainActivity extends AppCompatActivity {
     private SensorManager sensorManager;
     private Sensor gyroscope, magneticSensor, accelerometerSensor, barometer;
 
+    private FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationCallback locationCallback;
+    private Location currentLocation;
 
     // Sensor data arrays for orientation calculation
     private float[] gravityValues = new float[3];
     private float[] magneticValues = new float[3];
 
     private final String PHONE_NUMBER = "089688276157";
-    private final String HELP_MESSAGE = "Help, I'm on North";
+    private final String HELP_MESSAGE ="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +90,25 @@ public class MainActivity extends AppCompatActivity {
         magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         barometer = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+
+        // Initialize FusedLocationProviderClient
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // Request location updates
+        requestLocationUpdates();
+
+        // Button to send SMS
+        Button sendSmsButton = findViewById(R.id.buttonSendTest);
+        sendSmsButton.setOnClickListener(view -> sendSmsIfPermissionGranted());
+
+        Button buttonOpenMap = findViewById(R.id.buttonOpenMap);
+        buttonOpenMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -129,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
             float celsiusTemperature = temperature / 10.0f; // Convert to Celsius
             temperatureText.setText("Battery Temperature: " + celsiusTemperature + "°C");
 
-            if(celsiusTemperature > 40)
+            if(celsiusTemperature > 45)
             {
                 if(mediaPlayer != null && !mediaPlayer.isPlaying())
                 {
@@ -264,6 +294,30 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private void requestLocationUpdates() {
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(10000) // 10 seconds
+                .setFastestInterval(5000); // 5 seconds
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult != null) {
+                    currentLocation = locationResult.getLastLocation();
+                }
+            }
+        };
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return;
+        }
+
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+    }
+
     private void sendSmsIfPermissionGranted() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
             sendHelpSms();
@@ -277,12 +331,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendHelpSms() {
-        try {
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(PHONE_NUMBER, null, HELP_MESSAGE, null, null);
-            Toast.makeText(this, "Help message sent to " + PHONE_NUMBER, Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        if (currentLocation != null) {
+            double latitude = currentLocation.getLatitude();
+            double longitude = currentLocation.getLongitude();
+
+            // Directly set the message with latitude and longitude
+            String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + "). I found a love!";
+
+            try {
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(PHONE_NUMBER, null, locationMessage, null, null);
+                Toast.makeText(this, "Help message sent to " + PHONE_NUMBER, Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
         }
     }
 }

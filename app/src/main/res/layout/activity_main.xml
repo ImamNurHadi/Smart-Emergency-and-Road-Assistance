@@ -66,4 +66,12 @@
         android:onClick="sendTestSms"
         android:text="Send Test SMS" />
 
+    <Button
+        android:id="@+id/buttonOpenMap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Open Map" />
+
+
 </LinearLayout>

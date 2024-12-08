@@ -73,5 +73,19 @@
         android:layout_marginTop="16dp"
         android:text="Open Map" />
 
+    <Button
+        android:id="@+id/buttonSensorManager"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Sensor Manager" />
+
+    <TextView
+        android:id="@+id/soundStatusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Listening..."
+        android:textSize="18sp"
+        android:layout_margin="8dp" />
 
 </LinearLayout>

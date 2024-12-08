@@ -9,6 +9,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -16,6 +19,8 @@ import android.os.VibrationEffect;
 import android.media.MediaPlayer;
 import android.widget.Button;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import android.view.View;
@@ -42,7 +47,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView barometerText;
     // Vibrator instance
     private Vibrator vibrator;
+
+    //Audio
     private MediaPlayer mediaPlayer;
+    private TextView soundStatusText;
+    private boolean isListening = true;
+    private static final int SAMPLE_RATE = 44100; // Sample rate (Hz)
+    private static final int THRESHOLD = 10000;  // Amplitudo ambang batas
 
     // Sensors and SensorManager
     private SensorManager sensorManager;
@@ -64,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        requestPermissions();
         // Initialize views
         temperatureText = findViewById(R.id.temperatureText);
         textX = findViewById(R.id.textX);
@@ -109,6 +121,19 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        Button buttonSensorManager = findViewById(R.id.buttonSensorManager);
+        buttonSensorManager.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Create an Intent to start SManagerActivity
+                Intent intent = new Intent(MainActivity.this, SManagerActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        soundStatusText = findViewById(R.id.soundStatusText);
+
     }
 
     @Override
@@ -137,6 +162,23 @@ public class MainActivity extends AppCompatActivity {
         sensorManager.unregisterListener(barometerListener);
     }
 
+    private void requestPermissions() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+        } else {
+            startListening();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startListening();
+        } else {
+            Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+        }
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -293,6 +335,58 @@ public class MainActivity extends AppCompatActivity {
             // Not used in this example
         }
     };
+
+    private void startListening() {
+        int bufferSize = AudioRecord.getMinBufferSize(
+                SAMPLE_RATE,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT);
+
+        AudioRecord audioRecord = new AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                SAMPLE_RATE,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize);
+
+        if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+            Toast.makeText(this, "AudioRecord Initialization Failed!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        audioRecord.startRecording();
+        isListening = true;
+
+        new Thread(() -> {
+            short[] buffer = new short[bufferSize];
+            while (isListening) {
+                int read = audioRecord.read(buffer, 0, buffer.length);
+                if (read > 0) {
+                    int amplitude = calculateAmplitude(buffer, read);
+                    runOnUiThread(() -> soundStatusText.setText("Listening... Amplitude: " + amplitude));
+
+                    if (amplitude > THRESHOLD) {
+                        runOnUiThread(this::sendHelpSms);
+                    }
+                }
+                try {
+                    Thread.sleep(500); // Perbarui setiap 500ms
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            audioRecord.stop();
+            audioRecord.release();
+        }).start();
+    }
+
+    private int calculateAmplitude(short[] buffer, int read) {
+        int maxAmplitude = 0;
+        for (int i = 0; i < read; i++) {
+            maxAmplitude = Math.max(maxAmplitude, Math.abs(buffer[i]));
+        }
+        return maxAmplitude;
+    }
 
     private void requestLocationUpdates() {
         LocationRequest locationRequest = LocationRequest.create()

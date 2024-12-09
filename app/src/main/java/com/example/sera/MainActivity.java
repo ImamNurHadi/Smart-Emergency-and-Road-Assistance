@@ -23,6 +23,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
 import android.view.View;
 
 
@@ -36,7 +37,8 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,7 +55,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView soundStatusText;
     private boolean isListening = true;
     private static final int SAMPLE_RATE = 44100; // Sample rate (Hz)
-    private static final int THRESHOLD = 10000;  // Amplitudo ambang batas
+    private static final int THRESHOLD = 50000;  // Amplitudo ambang batas
+
+    //Shaking
 
     // Sensors and SensorManager
     private SensorManager sensorManager;
@@ -68,7 +72,9 @@ public class MainActivity extends AppCompatActivity {
     private float[] magneticValues = new float[3];
 
     private final String PHONE_NUMBER = "089688276157";
-    private final String HELP_MESSAGE ="";
+    private final String HELP_MESSAGE = "";
+
+    private Button logoutButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,7 +140,38 @@ public class MainActivity extends AppCompatActivity {
 
         soundStatusText = findViewById(R.id.soundStatusText);
 
+        // Inisialisasi tombol logout
+        logoutButton = findViewById(R.id.buttonLogout);
+
+        // Set onClickListener untuk tombol logout
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Logout dari Firebase Authentication
+                FirebaseAuth.getInstance().signOut();
+
+                // Arahkan kembali ke halaman login
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish(); // Tutup MainActivity
+            }
+        });
+
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            // Jika tidak ada user yang login, arahkan ke LoginActivity
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish(); // Menghentikan MainActivity agar tidak kembali ke halaman ini
+        }
+    }
+
 
     @Override
     protected void onResume() {
@@ -179,6 +216,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
         }
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -201,10 +239,8 @@ public class MainActivity extends AppCompatActivity {
             float celsiusTemperature = temperature / 10.0f; // Convert to Celsius
             temperatureText.setText("Battery Temperature: " + celsiusTemperature + "°C");
 
-            if(celsiusTemperature > 45)
-            {
-                if(mediaPlayer != null && !mediaPlayer.isPlaying())
-                {
+            if (celsiusTemperature > 45) {
+                if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
                     mediaPlayer.start();
                 }
             }
@@ -217,8 +253,6 @@ public class MainActivity extends AppCompatActivity {
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
             // Not used in this example
         }
-
-
         @Override
         public void onSensorChanged(SensorEvent event) {
             float x = event.values[0];
@@ -228,46 +262,6 @@ public class MainActivity extends AppCompatActivity {
             textX.setText("X : " + x + " rad/s");
             textY.setText("Y : " + y + " rad/s");
             textZ.setText("Z : " + z + " rad/s");
-
-            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                System.arraycopy(event.values, 0, gravityValues, 0, event.values.length);
-            } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-                System.arraycopy(event.values, 0, magneticValues, 0, event.values.length);
-            }
-
-
-            // Calculate orientation if we have both accelerometer and magnetic sensor data
-            if (gravityValues != null && magneticValues != null) {
-                float[] rotationMatrix = new float[9];
-                float[] orientationAngles = new float[3];
-
-                SensorManager.getRotationMatrix(rotationMatrix, null, gravityValues, magneticValues);
-                SensorManager.getOrientation(rotationMatrix, orientationAngles);
-
-                // Get the azimuth angle (rotation around the Z-axis) in degrees
-                float azimuth = (float) Math.toDegrees(orientationAngles[0]);
-                azimuth = (azimuth + 360) % 360; // Normalize to 0-360 degrees
-
-                // Determine direction based on azimuth
-                if (azimuth >= 315 || azimuth < 45) {
-                    directionText.setText("North");
-                } else if (azimuth >= 45 && azimuth < 135) {
-                    directionText.setText("East");
-                } else if (azimuth >= 135 && azimuth < 225) {
-                    directionText.setText("South");
-                } else if (azimuth >= 225 && azimuth < 315) {
-                    directionText.setText("West");
-
-                    // Trigger vibration if direction is West
-                    if (vibrator != null && vibrator.hasVibrator()) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
-                        } else {
-                            vibrator.vibrate(500); // Fallback for devices below API 26
-                        }
-                    }
-                }
-            }
         }
     };
 
@@ -342,6 +336,16 @@ public class MainActivity extends AppCompatActivity {
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         AudioRecord audioRecord = new AudioRecord(
                 MediaRecorder.AudioSource.MIC,
                 SAMPLE_RATE,

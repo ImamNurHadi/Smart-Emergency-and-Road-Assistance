@@ -14,30 +14,41 @@
         android:textSize="18sp"
         android:layout_margin="8dp" />
 
-    <!-- Gyroscope Readings -->
+    <TextView
+        android:id="@+id/shakeConditionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:text="Shaking Status: Normal"
+        android:textSize="18sp" />
+
+    <!-- TextView for gyroscope readings -->
     <TextView
         android:id="@+id/textX"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="X: "
-        android:textSize="18sp"
-        android:layout_margin="8dp" />
+        android:layout_below="@id/temperatureText"
+        android:layout_marginTop="8dp"
+        android:text="Gyro X:"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textY"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Y: "
-        android:textSize="18sp"
-        android:layout_margin="8dp" />
+        android:layout_below="@id/textX"
+        android:layout_marginTop="8dp"
+        android:text="Gyro Y:"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textZ"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Z: "
-        android:textSize="18sp"
-        android:layout_margin="8dp" />
+        android:layout_below="@id/textY"
+        android:layout_marginTop="8dp"
+        android:text="Gyro Z:"
+        android:textSize="18sp" />
 
     <!-- Magnetic Direction -->
     <TextView
@@ -87,5 +98,11 @@
         android:text="Listening..."
         android:textSize="18sp"
         android:layout_margin="8dp" />
+    <Button
+        android:id="@+id/buttonLogout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Log Out" />
 
 </LinearLayout>

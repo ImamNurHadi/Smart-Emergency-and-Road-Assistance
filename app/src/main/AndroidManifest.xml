@@ -27,6 +27,18 @@
         android:theme="@style/Theme.Sera"
         tools:targetApi="31">
         <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Register"
+            android:exported="false" />
+        <activity
+            android:name=".Login"
+            android:exported="false" />
+        <activity
             android:name=".SManagerActivity"
             android:exported="false" />
         <!--
@@ -49,6 +61,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -57,4 +70,5 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBjgJeLlVh4_pSZXrVRxitjXTlHq7eP2dw" />
     </application>
+
 </manifest>

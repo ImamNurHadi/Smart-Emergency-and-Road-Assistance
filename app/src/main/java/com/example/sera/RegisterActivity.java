@@ -1,12 +1,14 @@
 package com.example.sera;
+
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -65,7 +67,7 @@ public class RegisterActivity extends AppCompatActivity {
                     } else {
                         // If sign-in fails, display a message to the user
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        Toast.makeText(RegisterActivity.this, "Authentication failed.",
+                        Toast.makeText(RegisterActivity.this, "Authentication failed: " + task.getException().getMessage(),
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -78,13 +80,25 @@ public class RegisterActivity extends AppCompatActivity {
         // Firebase Realtime Database Reference
         DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
 
-        // Save user data directly into the database
-        usersRef.child(userId).child("name").setValue(name);
-        usersRef.child(userId).child("email").setValue(email);
-        usersRef.child(userId).child("role").setValue("user"); // Default role as "user"
+        // Create a user object to save to the database
+        User user = new User(name, email, "user"); // Default role as "user"
 
-        // After successful registration, show a toast and finish activity
-        Toast.makeText(RegisterActivity.this, "User registered successfully", Toast.LENGTH_SHORT).show();
-        finish(); // Redirect to login or next screen
+        // Save user data under the user's UID
+        usersRef.child(userId).setValue(user)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(RegisterActivity.this, "User registered successfully", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "User data saved to database: " + userId);
+
+                        // Redirect to LoginActivity
+                        Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                        startActivity(intent);
+                        finish(); // Close this activity
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Failed to save user data: " + task.getException().getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Database error: ", task.getException());
+                    }
+                });
     }
 }

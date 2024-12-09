@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "352966843866",
+    "firebase_url": "https://sera-207a1-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "sera-207a1",
     "storage_bucket": "sera-207a1.firebasestorage.app"
   },
@@ -10,25 +11,6 @@
         "mobilesdk_app_id": "1:352966843866:android:8f5166cb98d8b9077734e3",
         "android_client_info": {
           "package_name": "com.example.sera"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyA2bTmsnWlk8pCvhbe3YdhzPEpmPEy_iio"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:352966843866:android:ac0b99351f0b85777734e3",
-        "android_client_info": {
-          "package_name": "com.vis.sera"
         }
       },
       "oauth_client": [],

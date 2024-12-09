@@ -1,6 +1,7 @@
 package com.example.sera;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -10,6 +11,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -53,7 +55,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         searchPlace2 = findViewById(R.id.search_place_2);
         btnMapMode = findViewById(R.id.btn_map_mode);
         btnStartDirections = findViewById(R.id.btn_start_directions);
-        progressBar = findViewById(R.id.progress_bar);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -64,6 +65,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         setupSearchListeners();
         setupMapModeToggle();
+
+        ImageView imageViewMap = findViewById(R.id.imageSensorManager);
+        imageViewMap.setOnClickListener(v -> {
+            // Logika buka peta
+            Intent intent = new Intent(MapsActivity.this, MapsActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void setupSearchListeners() {

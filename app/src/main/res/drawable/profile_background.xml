@@ -1,0 +1,21 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Lingkaran Warna Biru (73x73 dp) -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#2196F3" /> <!-- Ganti dengan warna biru sesuai desain -->
+        </shape>
+    </item>
+
+    <!-- Lingkaran Warna Putih (63x63 dp, di atas lingkaran biru) -->
+    <item
+        android:left="5dp"
+        android:top="5dp"
+        android:right="5dp"
+        android:bottom="5dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" /> <!-- Warna putih -->
+        </shape>
+    </item>
+
+</layer-list>

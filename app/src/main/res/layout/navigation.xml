@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kontainer Frame -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:layout_marginBottom="0dp">
+
+    <!-- Persegi Panjang Biru (390x63dp) -->
+    <View
+        android:layout_width="390dp"
+        android:layout_height="63dp"
+        android:layout_gravity="center|bottom"
+        android:background="@drawable/background_blue_retangle" />
+
+    <!-- Persegi Panjang Putih (390x55dp) -->
+    <View
+        android:layout_width="390dp"
+        android:layout_height="55dp"
+        android:layout_gravity="center|bottom"
+        android:background="@drawable/background_white_retangle" />
+
+    <!-- Lingkaran Profil -->
+    <FrameLayout
+        android:layout_width="63dp"
+        android:layout_height="63dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="-16dp">
+
+        <!-- Lingkaran Biru -->
+        <View
+            android:layout_width="63dp"
+            android:layout_height="63dp"
+            android:background="@drawable/background_blue_circle" />
+
+        <!-- Lingkaran Putih -->
+        <View
+            android:layout_width="53dp"
+            android:layout_height="53dp"
+            android:layout_gravity="center"
+            android:background="@drawable/background_white_circle" />
+
+        <!-- Gambar Profil -->
+        <ImageView
+            android:layout_width="33dp"
+            android:layout_height="33dp"
+            android:layout_gravity="center"
+            android:src="@drawable/profile"
+            android:scaleType="centerCrop"
+            android:contentDescription="Profile Icon" />
+    </FrameLayout>
+
+    <!-- Gambar Sensor Manager (Kiri) -->
+    <ImageView
+        android:layout_width="23dp"
+        android:layout_height="23dp"
+        android:layout_gravity="center_vertical|start"
+        android:layout_marginStart="32dp"
+        android:src="@drawable/sm"
+        android:scaleType="fitCenter"
+        android:contentDescription="Sensor Manager" />
+
+    <!-- Gambar Map (Kanan) -->
+    <ImageView
+        android:id="@+id/imageSensorManager"
+        android:layout_width="23dp"
+        android:layout_height="23dp"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginEnd="32dp"
+        android:src="@drawable/peta"
+        android:scaleType="fitCenter"
+        android:contentDescription="Open Map" />
+</FrameLayout>

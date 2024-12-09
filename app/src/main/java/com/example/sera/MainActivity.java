@@ -18,6 +18,7 @@ import android.os.Vibrator;
 import android.os.VibrationEffect;
 import android.media.MediaPlayer;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -73,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     private float[] gravityValues = new float[3];
     private float[] magneticValues = new float[3];
 
-    private final String PHONE_NUMBER = "089688276157";
+    private final String PHONE_NUMBER = "081358007575";
     private final String HELP_MESSAGE = "";
 
     private Button logoutButton;
@@ -131,14 +132,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button buttonSensorManager = findViewById(R.id.buttonSensorManager);
-        buttonSensorManager.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Create an Intent to start SManagerActivity
-                Intent intent = new Intent(MainActivity.this, SManagerActivity.class);
-                startActivity(intent);
-            }
+        ImageView imageViewMap = findViewById(R.id.imageSensorManager);
+        imageViewMap.setOnClickListener(v -> {
+            // Logika buka peta
+            Intent intent = new Intent(MainActivity.this, MapsActivity.class);
+            startActivity(intent);
         });
 
         soundStatusText = findViewById(R.id.soundStatusText);

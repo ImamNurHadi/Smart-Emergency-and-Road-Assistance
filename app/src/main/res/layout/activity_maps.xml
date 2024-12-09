@@ -1,62 +1,67 @@
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipChildren="false"
     tools:context=".MapsActivity">
 
+    <!-- Map Fragment di bawah semuanya -->
     <fragment
         android:id="@+id/id_map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <AutoCompleteTextView
-        android:id="@+id/search_place_1"
-        android:layout_width="350dp"
-        android:layout_height="wrap_content"
-        android:hint="Search start location (type 'here' for current)"
-        android:layout_alignParentTop="true"
-        android:padding="10dp"
-        android:background="@android:color/white"
-        android:layout_margin="10dp"
-        android:inputType="text" />
+    <!-- Layer atas MapFragment -->
+    <LinearLayout
+        android:id="@+id/overlay_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <AutoCompleteTextView
-        android:id="@+id/search_place_2"
-        android:layout_width="350dp"
-        android:layout_height="wrap_content"
-        android:hint="Search for a second place"
-        android:layout_below="@id/search_place_1"
-        android:padding="10dp"
-        android:background="@android:color/white"
-        android:layout_margin="10dp"
-        android:inputType="text" />
+        <!-- Search Fields -->
+        <AutoCompleteTextView
+            android:id="@+id/search_place_1"
+            android:layout_width="350dp"
+            android:layout_height="wrap_content"
+            android:hint="Search start location (type 'here' for current)"
+            android:padding="10dp"
+            android:background="@android:color/white"
+            android:layout_margin="10dp"
+            android:inputType="text" />
 
-    <Button
-        android:id="@+id/btn_start_directions"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/search_place_2"
-        android:layout_marginTop="10dp"
-        android:layout_alignParentStart="true"
-        android:text="Start Directions" />
+        <AutoCompleteTextView
+            android:id="@+id/search_place_2"
+            android:layout_width="350dp"
+            android:layout_height="wrap_content"
+            android:hint="Search for a second place"
+            android:padding="10dp"
+            android:background="@android:color/white"
+            android:layout_margin="10dp"
+            android:inputType="text" />
 
-    <Button
-        android:id="@+id/btn_map_mode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="10dp"
-        android:layout_below="@id/btn_start_directions"
-        android:text="Satelit" />
+        <!-- Buttons -->
+        <Button
+            android:id="@+id/btn_start_directions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start Directions" />
 
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/btn_map_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Satelit" />
+    </LinearLayout>
+
+    <!-- Navigasi selalu di paling bawah -->
+    <include
+        layout="@layout/navigation"
+        android:id="@+id/navigation_bar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:layout_centerInParent="true" />
-</RelativeLayout>
+        android:layout_gravity="bottom" />
+
+</FrameLayout>

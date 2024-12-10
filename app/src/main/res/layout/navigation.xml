@@ -53,6 +53,7 @@
 
     <!-- Gambar Sensor Manager (Kiri) -->
     <ImageView
+        android:id="@+id/imageSensorManager"
         android:layout_width="23dp"
         android:layout_height="23dp"
         android:layout_gravity="center_vertical|start"
@@ -63,7 +64,7 @@
 
     <!-- Gambar Map (Kanan) -->
     <ImageView
-        android:id="@+id/imageSensorManager"
+        android:id="@+id/imageMap"
         android:layout_width="23dp"
         android:layout_height="23dp"
         android:layout_gravity="center_vertical|end"

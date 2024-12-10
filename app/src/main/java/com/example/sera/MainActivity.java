@@ -8,6 +8,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraManager;
 import android.location.Location;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -50,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView textX, textY, textZ;
     private TextView directionText;
     private TextView barometerText;
+    private TextView shakeConditionText;
+
     // Vibrator instance
     private Vibrator vibrator;
 
@@ -61,10 +65,18 @@ public class MainActivity extends AppCompatActivity {
     private static final int THRESHOLD = 50000;  // Amplitudo ambang batas
 
     //Shaking
+    private static final float SHAKE_THRESHOLD = 1700f; // Threshold untuk mendeteksi guncangan
+    private long lastUpdate = 0; // Untuk mencatat waktu update terakhir
+    private float lastX, lastY, lastZ; // Untuk menyimpan nilai sumbu terakhir
+
 
     // Sensors and SensorManager
     private SensorManager sensorManager;
-    private Sensor gyroscope, magneticSensor, accelerometerSensor, barometer;
+    private CameraManager cameraManager;
+    private Sensor gyroscope, magneticSensor, accelerometerSensor, barometer,lightSensor;
+
+    private String cameraId;
+    private boolean isFlashOn = false;
 
     private FusedLocationProviderClient fusedLocationProviderClient;
     private LocationCallback locationCallback;
@@ -123,23 +135,38 @@ public class MainActivity extends AppCompatActivity {
         Button sendSmsButton = findViewById(R.id.buttonSendTest);
         sendSmsButton.setOnClickListener(view -> sendSmsIfPermissionGranted());
 
-        Button buttonOpenMap = findViewById(R.id.buttonOpenMap);
-        buttonOpenMap.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, MapsActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        ImageView imageViewMap = findViewById(R.id.imageSensorManager);
+        ImageView imageViewMap = findViewById(R.id.imageMap);
         imageViewMap.setOnClickListener(v -> {
             // Logika buka peta
             Intent intent = new Intent(MainActivity.this, MapsActivity.class);
             startActivity(intent);
         });
 
+        ImageView imageViewSensorManager = findViewById(R.id.imageSensorManager);
+        imageViewSensorManager.setOnClickListener(v -> {
+            // Logika buka peta
+            Intent intent = new Intent(MainActivity.this, SManagerActivity.class);
+            startActivity(intent);
+        });
+
+        shakeConditionText = findViewById(R.id.shakeConditionText);
         soundStatusText = findViewById(R.id.soundStatusText);
+
+        // Light Sensor
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+
+        // Camera Manager
+        cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        try {
+            cameraId = cameraManager.getCameraIdList()[0];
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+
+        // Toggle Flash Button
+        Button toggleFlashButton = findViewById(R.id.buttonToggleFlash);
+        toggleFlashButton.setOnClickListener(v -> toggleFlash());
 
         // Inisialisasi tombol logout
         logoutButton = findViewById(R.id.buttonLogout);
@@ -189,6 +216,12 @@ public class MainActivity extends AppCompatActivity {
         if (barometer != null) {
             sensorManager.registerListener(barometerListener, barometer, SensorManager.SENSOR_DELAY_NORMAL);
         }
+        if (lightSensor != null) {
+            sensorManager.registerListener(lightEventListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        if (accelerometerSensor != null) {
+            sensorManager.registerListener(shakeListener, accelerometerSensor, SensorManager.SENSOR_DELAY_UI);
+        }
     }
 
     @Override
@@ -198,6 +231,13 @@ public class MainActivity extends AppCompatActivity {
         sensorManager.unregisterListener(gyroListener);
         sensorManager.unregisterListener(sensorEventListener);
         sensorManager.unregisterListener(barometerListener);
+        sensorManager.unregisterListener(shakeListener);
+        if (lightSensor != null) {
+            sensorManager.unregisterListener(lightEventListener);
+        }
+        if (accelerometerSensor != null) {
+            sensorManager.registerListener(shakeListener, accelerometerSensor, SensorManager.SENSOR_DELAY_UI);
+        }
     }
 
     private void requestPermissions() {
@@ -230,6 +270,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Unregister battery receiver
         unregisterReceiver(batteryReceiver);
+    }
+
+
+    private void toggleFlash() {
+        try {
+            isFlashOn = !isFlashOn;
+            cameraManager.setTorchMode(cameraId, isFlashOn);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     // Battery temperature broadcast receiver
@@ -298,18 +348,10 @@ public class MainActivity extends AppCompatActivity {
                     directionText.setText("South");
                 } else if (azimuth >= 225 && azimuth < 315) {
                     directionText.setText("West");
-
-                    // Trigger vibration if direction is West
-                    if (vibrator != null && vibrator.hasVibrator()) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
-                        } else {
-                            vibrator.vibrate(500); // Fallback for devices below API 26
-                        }
                     }
                 }
             }
-        }
+
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -384,6 +426,94 @@ public class MainActivity extends AppCompatActivity {
             audioRecord.release();
         }).start();
     }
+
+    private final SensorEventListener shakeListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                long currentTime = System.currentTimeMillis();
+
+                // Periksa apakah ada waktu yang cukup sejak pembaruan terakhir
+                if ((currentTime - lastUpdate) > 100) { // Setiap 100ms
+                    long diffTime = currentTime - lastUpdate;
+                    lastUpdate = currentTime;
+
+                    float x = event.values[0];
+                    float y = event.values[1];
+                    float z = event.values[2];
+
+                    // Hitung perubahan akselerasi
+                    float deltaX = x - lastX;
+                    float deltaY = y - lastY;
+                    float deltaZ = z - lastZ;
+
+                    // Hitung kekuatan guncangan
+                    double shake = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ) / diffTime * 10000;
+
+                    // Simpan nilai sumbu saat ini untuk referensi berikutnya
+                    lastX = x;
+                    lastY = y;
+                    lastZ = z;
+
+                    // Periksa apakah kekuatan guncangan melebihi ambang batas
+                    if (shake > SHAKE_THRESHOLD) {
+                        onShakeDetected(); // Panggil fungsi saat guncangan terdeteksi
+                    }
+                    else {
+                        shakeConditionText.setText("Shaking Status: Normal");
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // Tidak digunakan
+        }
+    };
+
+    private void onShakeDetected() {
+        Toast.makeText(this, "Guncangan terdeteksi!", Toast.LENGTH_SHORT).show();
+        shakeConditionText.setText("Shaking Status: Guncangan terdeteksi");
+        // Tambahkan aksi setelah guncangan, misalnya mengirim SMS darurat
+        sendHelpSms();
+    }
+
+    private final SensorEventListener lightEventListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float lightValue = event.values[0]; // Nilai cahaya dalam lux
+            TextView lightText = findViewById(R.id.lightText);
+            lightText.setText("Light Level: " + lightValue + " lux");
+
+            if (lightValue < 3) { // Threshold untuk kondisi gelap
+                try {
+                    if (!isFlashOn) {
+                        cameraManager.setTorchMode(cameraId, true);
+                        isFlashOn = true;
+                    }
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                try {
+                    if (isFlashOn) {
+                        cameraManager.setTorchMode(cameraId, false);
+                        isFlashOn = false;
+                    }
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // Tidak digunakan
+        }
+    };
+
 
     private int calculateAmplitude(short[] buffer, int read) {
         int maxAmplitude = 0;

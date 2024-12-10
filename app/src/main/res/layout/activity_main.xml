@@ -91,20 +91,6 @@
                 android:text="Send Test SMS"
                 android:layout_marginBottom="8dp" />
 
-            <Button
-                android:id="@+id/buttonOpenMap"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Open Map"
-                android:layout_marginBottom="8dp" />
-
-            <Button
-                android:id="@+id/buttonSensorManager"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sensor Manager"
-                android:layout_marginBottom="8dp" />
-
             <!-- Sound Status -->
             <TextView
                 android:id="@+id/soundStatusText"
@@ -113,6 +99,22 @@
                 android:text="Listening..."
                 android:textSize="18sp"
                 android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/lightText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Listening..."
+                android:textSize="18sp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/buttonToggleFlash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Toggle Flash"
+                android:layout_marginBottom="8dp" />
+
 
             <!-- Logout Button -->
             <Button

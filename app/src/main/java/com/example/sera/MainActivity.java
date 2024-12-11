@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int THRESHOLD = 50000;  // Amplitudo ambang batas
 
     //Shaking
-    private static final float SHAKE_THRESHOLD = 1700f; // Threshold untuk mendeteksi guncangan
+    private static final float SHAKE_THRESHOLD = 2500f; // Threshold untuk mendeteksi guncangan
     private long lastUpdate = 0; // Untuk mencatat waktu update terakhir
     private float lastX, lastY, lastZ; // Untuk menyimpan nilai sumbu terakhir
 

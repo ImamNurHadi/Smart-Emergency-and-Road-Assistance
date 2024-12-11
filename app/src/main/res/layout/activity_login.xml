@@ -28,17 +28,19 @@
             android:id="@+id/et_email"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
             android:hint="Email"
             android:inputType="textEmailAddress"
-            android:layout_marginTop="40dp" />
+            android:minHeight="48dp" />
 
         <EditText
             android:id="@+id/et_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:hint="Password"
             android:inputType="textPassword"
-            android:layout_marginTop="16dp" />
+            android:minHeight="48dp" />
 
         <Button
             android:id="@+id/btnlogin"

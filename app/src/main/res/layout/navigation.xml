@@ -42,7 +42,8 @@
             android:background="@drawable/background_white_circle" />
 
         <!-- Gambar Profil -->
-        <ImageView
+        <ImageButton
+            android:id="@+id/profile"
             android:layout_width="33dp"
             android:layout_height="33dp"
             android:layout_gravity="center"

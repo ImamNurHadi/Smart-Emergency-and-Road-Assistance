@@ -1,37 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/blue"
+    android:clipToPadding="false">
 
-    <EditText
-        android:id="@+id/et_email"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Email"
-        android:inputType="textEmailAddress"/>
+    <!-- Logo -->
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:src="@drawable/logo" />
 
-    <EditText
-        android:id="@+id/et_password"
+    <!-- Kotak Login -->
+    <LinearLayout
+        android:id="@+id/kotaklogin"
         android:layout_width="match_parent"
+        android:layout_height="413dp"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/kotaklogin"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <EditText
+            android:id="@+id/et_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:layout_marginTop="40dp" />
+
+        <EditText
+            android:id="@+id/et_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:layout_marginTop="16dp" />
+
+        <Button
+            android:id="@+id/btnlogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@color/white"
+            android:textColor="@color/black"
+            android:text="Login" />
+
+        <TextView
+            android:id="@+id/tvrepassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Don't have an account? Register"
+            android:textColor="@android:color/holo_blue_dark"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal" />
+    </LinearLayout>
+
+    <!-- Kotak Pilihan -->
+    <LinearLayout
+        android:id="@+id/kotakpilihan"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:hint="Password"
-        android:inputType="textPassword"/>
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="-30dp"
+        android:layout_above="@id/kotaklogin"
+        android:background="@drawable/kotakpilihan"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center">
 
     <Button
-        android:id="@+id/btnlogin"
-        android:layout_width="match_parent"
+        android:id="@+id/tvlogin"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Login"/>
+        android:text="LOGIN"
+        android:background="@android:color/transparent"
+        android:textColor="@color/white" />
 
-    <TextView
+    <Button
         android:id="@+id/tvregister"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Don't have an account? Register"
-        android:textColor="@android:color/holo_blue_dark"
-        android:layout_marginTop="16dp"
-        android:gravity="center"/>
-
+        android:text="REGISTER"
+        android:background="@android:color/transparent"
+        android:textColor="@color/white"
+        android:layout_marginStart="16dp" />
 </LinearLayout>
+
+    </RelativeLayout>

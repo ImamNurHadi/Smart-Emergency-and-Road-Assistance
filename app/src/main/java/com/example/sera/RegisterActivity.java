@@ -18,7 +18,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private static final String TAG = "RegisterActivity";
     private EditText etName, etEmail, etPassword;
-    private Button btnRegister;
+    private Button btnRegister, tvLogin2, tvRegister2;
 
     private FirebaseAuth mAuth;
 
@@ -35,6 +35,20 @@ public class RegisterActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.et_email);
         etPassword = findViewById(R.id.et_password);
         btnRegister = findViewById(R.id.btn_register);
+        tvRegister2 = findViewById(R.id.tvregister2);
+        tvLogin2 = findViewById(R.id.tvlogin2);
+
+        // Set click listener for registering a new account
+        tvRegister2.setOnClickListener(v -> {
+            Intent intent = new Intent(RegisterActivity.this, RegisterActivity.class);
+            startActivity(intent); // Go to Register Activity
+        });
+
+        // Set click listener for registering a new account
+        tvLogin2.setOnClickListener(v -> {
+            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+            startActivity(intent); // Go to Register Activity
+        });
 
         // Set button click listener to register user
         btnRegister.setOnClickListener(v -> registerUser());

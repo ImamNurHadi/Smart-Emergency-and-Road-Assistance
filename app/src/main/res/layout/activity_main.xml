@@ -156,7 +156,21 @@
                         android:layout_height="wrap_content"
                         android:text="Pressure"
                         android:textSize="18sp" />
+                    <TextView
+                        android:id="@+id/soundStatusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Listening..."
+                        android:textSize="18sp"
+                        android:layout_marginBottom="8dp" />
 
+                    <TextView
+                        android:id="@+id/lightText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Light Level..."
+                        android:textSize="18sp"
+                        android:layout_marginBottom="8dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

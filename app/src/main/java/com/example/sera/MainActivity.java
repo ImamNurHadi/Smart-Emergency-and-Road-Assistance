@@ -590,12 +590,16 @@ public class MainActivity extends AppCompatActivity {
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    // Ambil phoneNumber dari database
+                    // Ambil phoneNumber dan history dari database
                     String phoneNumber = snapshot.child("contact").getValue(String.class);
+                    String history = snapshot.child("history").getValue(String.class);
 
                     if (phoneNumber != null && !phoneNumber.isEmpty()) {
-                        // Pesan lokasi
-                        String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + "). I found a love!";
+                        // Format pesan dengan lokasi dan riwayat penyakit
+                        String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + ").";
+                        if (history != null && !history.isEmpty()) {
+                            locationMessage += " I have a " + history + " medical history.";
+                        }
 
                         try {
                             // Kirim SMS

@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     private float[] gravityValues = new float[3];
     private float[] magneticValues = new float[3];
 
-    private final String PHONE_NUMBER = "081358007575";
+    private final String PHONE_NUMBER = "";
     private final String HELP_MESSAGE = "";
 
     private Button logoutButton;
@@ -582,58 +582,84 @@ public class MainActivity extends AppCompatActivity {
         if (currentLocation != null) {
             double latitude = currentLocation.getLatitude();
             double longitude = currentLocation.getLongitude();
-
-            // Directly set the message with latitude and longitude
-            String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + "). I found a love!";
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-            try {
-                // Send SMS
-                SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(PHONE_NUMBER, null, locationMessage, null, null);
-                Toast.makeText(this, "Help message sent to " + PHONE_NUMBER, Toast.LENGTH_SHORT).show();
+            // Referensi ke database
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
-                // Save accident data to Firebase
-                DatabaseReference accidentsRef = FirebaseDatabase.getInstance().getReference("accidents");
-                String accidentId = accidentsRef.push().getKey(); // Generate unique key for accident
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    // Ambil phoneNumber dari database
+                    String phoneNumber = snapshot.child("contact").getValue(String.class);
 
-                if (accidentId != null) {
-                    DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
-                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            String name = snapshot.child("name").getValue(String.class);
-                            String history = snapshot.child("history").getValue(String.class);
+                    if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                        // Pesan lokasi
+                        String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + "). I found a love!";
 
-                            // Create accident data
-                            HashMap<String, Object> accidentData = new HashMap<>();
-                            accidentData.put("userId", userId);
-                            accidentData.put("name", name != null ? name : "Unknown");
-                            accidentData.put("history", history != null ? history : "No history");
-                            accidentData.put("location", new HashMap<String, Object>() {{
-                                put("latitude", latitude);
-                                put("longitude", longitude);
-                            }});
-                            accidentData.put("timestamp", System.currentTimeMillis());
+                        try {
+                            // Kirim SMS
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage(phoneNumber, null, locationMessage, null, null);
+                            Toast.makeText(MainActivity.this, "Help message sent to " + phoneNumber, Toast.LENGTH_SHORT).show();
 
-                            // Save to "accidents"
-                            accidentsRef.child(accidentId).setValue(accidentData)
-                                    .addOnSuccessListener(aVoid -> Toast.makeText(MainActivity.this, "Accident info saved.", Toast.LENGTH_SHORT).show())
-                                    .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Failed to save accident info: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                            // Simpan data ke Firebase di node "accidents"
+                            saveAccidentData(userId, latitude, longitude);
+
+                        } catch (Exception e) {
+                            Toast.makeText(MainActivity.this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            Toast.makeText(MainActivity.this, "Failed to fetch user data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    } else {
+                        Toast.makeText(MainActivity.this, "No contact found for this user.", Toast.LENGTH_SHORT).show();
+                    }
                 }
 
-            } catch (Exception e) {
-                Toast.makeText(this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(MainActivity.this, "Failed to fetch user data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         } else {
             Toast.makeText(this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    // Fungsi untuk menyimpan data kecelakaan ke Firebase
+    private void saveAccidentData(String userId, double latitude, double longitude) {
+        DatabaseReference accidentsRef = FirebaseDatabase.getInstance().getReference("accidents");
+        String accidentId = accidentsRef.push().getKey(); // Generate unique key for accident
+
+        if (accidentId != null) {
+            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    String name = snapshot.child("name").getValue(String.class);
+                    String history = snapshot.child("history").getValue(String.class);
+
+                    // Buat data kecelakaan
+                    HashMap<String, Object> accidentData = new HashMap<>();
+                    accidentData.put("userId", userId);
+                    accidentData.put("name", name != null ? name : "Unknown");
+                    accidentData.put("history", history != null ? history : "No history");
+                    accidentData.put("location", new HashMap<String, Object>() {{
+                        put("latitude", latitude);
+                        put("longitude", longitude);
+                    }});
+                    accidentData.put("timestamp", System.currentTimeMillis());
+
+                    // Simpan ke "accidents"
+                    accidentsRef.child(accidentId).setValue(accidentData)
+                            .addOnSuccessListener(aVoid -> Toast.makeText(MainActivity.this, "Accident info saved.", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Failed to save accident info: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Toast.makeText(MainActivity.this, "Failed to fetch user data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
 }

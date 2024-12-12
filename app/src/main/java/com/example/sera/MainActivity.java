@@ -162,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+
         // Tombol navigasi ke Profile Activity
         ImageView profileButton = findViewById(R.id.profile);
         profileButton.setOnClickListener(new View.OnClickListener() {
@@ -170,6 +171,13 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
                 startActivity(intent);
             }
+        });
+
+        Button buttonKecelakaan = findViewById(R.id.buttonKecelakaan);
+        buttonKecelakaan.setOnClickListener(v -> {
+            // Logika buka peta
+            Intent intent = new Intent(MainActivity.this, Accidents.class);
+            startActivity(intent);
         });
 
         shakeConditionText = findViewById(R.id.shakeConditionText);

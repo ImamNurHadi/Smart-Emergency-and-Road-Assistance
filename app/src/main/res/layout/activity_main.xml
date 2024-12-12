@@ -189,6 +189,12 @@
                 android:layout_height="wrap_content"
                 android:text="Toggle Flash"
                 android:layout_marginBottom="12dp" />
+            <Button
+                android:id="@+id/buttonKecelakaan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Crash Data"
+                android:layout_marginBottom="12dp" />
 
             <!-- Logout Button -->
             <Button

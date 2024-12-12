@@ -17,6 +17,8 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
 import android.media.MediaPlayer;
@@ -26,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -619,23 +622,39 @@ public class MainActivity extends AppCompatActivity {
 
                     if (phoneNumber != null && !phoneNumber.isEmpty()) {
                         // Format pesan dengan lokasi dan riwayat penyakit
-                        String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + ").";
-                        if (history != null && !history.isEmpty()) {
-                            locationMessage += " I have a " + history + " medical history.";
-                        }
+                        final String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + ")." +
+                                (history != null && !history.isEmpty() ? " I have a " + history + " medical history." : "");
 
-                        try {
-                            // Kirim SMS
-                            SmsManager smsManager = SmsManager.getDefault();
-                            smsManager.sendTextMessage(phoneNumber, null, locationMessage, null, null);
-                            Toast.makeText(MainActivity.this, "Help message sent to " + phoneNumber, Toast.LENGTH_SHORT).show();
+                        // Tampilkan AlertDialog untuk konfirmasi
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle("Konfirmasi Pengiriman")
+                                .setMessage("Apakah Anda ingin membatalkan pesan?")
+                                .setPositiveButton("Ya", (dialog, which) -> {
+                                    // Batalkan pengiriman
+                                    Toast.makeText(MainActivity.this, "Pengiriman pesan dibatalkan.", Toast.LENGTH_SHORT).show();
+                                })
+                                .setNegativeButton("Tidak", (dialog, which) -> {
+                                    // Kirim pesan
+                                    sendSms(phoneNumber, locationMessage);
+                                    saveAccidentData(userId, latitude, longitude);
+                                });
 
-                            // Simpan data ke Firebase di node "accidents"
-                            saveAccidentData(userId, latitude, longitude);
+                        // Buat AlertDialog
+                        AlertDialog dialog = builder.create();
 
-                        } catch (Exception e) {
-                            Toast.makeText(MainActivity.this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
+                        // Jalankan timeout selama 10 detik
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            if (dialog.isShowing()) {
+                                dialog.dismiss();
+                                // Kirim pesan secara otomatis
+                                sendSms(phoneNumber, locationMessage);
+                                saveAccidentData(userId, latitude, longitude);
+                            }
+                        }, 10000); // 10 detik
+
+                        // Tampilkan dialog
+                        dialog.show();
+
                     } else {
                         Toast.makeText(MainActivity.this, "No contact found for this user.", Toast.LENGTH_SHORT).show();
                     }
@@ -650,6 +669,18 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    // Fungsi untuk mengirim SMS
+    private void sendSms(String phoneNumber, String message) {
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phoneNumber, null, message, null, null);
+            Toast.makeText(MainActivity.this, "Help message sent to " + phoneNumber, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(MainActivity.this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     // Fungsi untuk menyimpan data kecelakaan ke Firebase
     private void saveAccidentData(String userId, double latitude, double longitude) {

@@ -1,5 +1,6 @@
 package com.example.sera;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -120,5 +121,11 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         Toast.makeText(this, "Data saved successfully", Toast.LENGTH_SHORT).show();
+
+        // Move to MainActivity
+        Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK); // Clear stack if needed
+        startActivity(intent);
+        finish(); // Close ProfileActivity
     }
 }

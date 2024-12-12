@@ -99,15 +99,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Tombol navigasi ke Profile Activity
-        ImageButton profileButton = findViewById(R.id.profile);
-        profileButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
-                startActivity(intent);
-            }
-        });
+
 
         requestPermissions();
         // Initialize views
@@ -159,6 +151,16 @@ public class MainActivity extends AppCompatActivity {
             // Logika buka peta
             Intent intent = new Intent(MainActivity.this, SManagerActivity.class);
             startActivity(intent);
+        });
+
+        // Tombol navigasi ke Profile Activity
+        ImageView profileButton = findViewById(R.id.profile);
+        profileButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                startActivity(intent);
+            }
         });
 
         shakeConditionText = findViewById(R.id.shakeConditionText);
@@ -572,47 +574,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendHelpSms() {
-        // Ambil data dari Firebase
-        databaseReference.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult().exists()) {
-                // Ambil data profil dari Firebase
-                UserProfile userProfile = task.getResult().getValue(UserProfile.class);
+        if (currentLocation != null) {
+            double latitude = currentLocation.getLatitude();
+            double longitude = currentLocation.getLongitude();
 
-                if (userProfile != null) {
-                    String phoneNumber = userProfile.contact; // Nomor telepon dari Firebase
-                    String helpMessage = userProfile.message; // Pesan bantuan dari Firebase
+            // Directly set the message with latitude and longitude
+            String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + "). I found a love!";
 
-                    if (phoneNumber == null || phoneNumber.isEmpty()) {
-                        Toast.makeText(this, "Nomor telepon tidak tersedia di profil.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (helpMessage == null || helpMessage.isEmpty()) {
-                        Toast.makeText(this, "Pesan tidak tersedia di profil.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    // Tambahkan informasi lokasi ke pesan
-                    if (currentLocation != null) {
-                        double latitude = currentLocation.getLatitude();
-                        double longitude = currentLocation.getLongitude();
-                        helpMessage += "\nLokasi saat ini: (" + latitude + ", " + longitude + ")";
-                    } else {
-                        helpMessage += "\nLokasi tidak tersedia.";
-                    }
-
-                    try {
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage(phoneNumber, null, helpMessage, null, null);
-                        Toast.makeText(this, "Pesan bantuan dikirim ke " + phoneNumber, Toast.LENGTH_SHORT).show();
-                    } catch (Exception e) {
-                        Toast.makeText(this, "Gagal mengirim SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(this, "Profil pengguna tidak ditemukan di Firebase.", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(this, "Gagal mengambil data profil: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            try {
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(PHONE_NUMBER, null, locationMessage, null, null);
+                Toast.makeText(this, "Help message sent to " + PHONE_NUMBER, Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
-        });
+        } else {
+            Toast.makeText(this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
+        }
     }
 }

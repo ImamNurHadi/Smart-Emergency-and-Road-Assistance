@@ -1,95 +1,124 @@
 package com.example.sera;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class ProfileActivity extends AppCompatActivity {
 
     private EditText editTextName, editTextContact, editTextMessage, editTextHistory;
     private Button buttonSave;
+
+    private FirebaseAuth mAuth;
     private DatabaseReference databaseReference;
-    private FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        // Inisialisasi Firebase
-        currentUser = FirebaseAuth.getInstance().getCurrentUser(); // Dapatkan pengguna saat ini
-        if (currentUser == null) {
-            Toast.makeText(this, "Pengguna tidak ditemukan. Harap login kembali.", Toast.LENGTH_SHORT).show();
-            finish(); // Tutup activity jika pengguna tidak login
-            return;
-        }
-        databaseReference = FirebaseDatabase.getInstance().getReference("Users").child(currentUser.getUid());
+        // Initialize Firebase Auth and Database Reference
+        mAuth = FirebaseAuth.getInstance();
+        databaseReference = FirebaseDatabase.getInstance().getReference("users");
 
-        // Inisialisasi View
+        // Initialize UI components
         editTextName = findViewById(R.id.editTextName);
         editTextContact = findViewById(R.id.editTextContact);
         editTextMessage = findViewById(R.id.editTextMessage);
         editTextHistory = findViewById(R.id.editTextHistory);
         buttonSave = findViewById(R.id.buttonSave);
 
-        // Set OnClickListener untuk tombol Simpan
-        buttonSave.setOnClickListener(new View.OnClickListener() {
+        buttonSave.setOnClickListener(v -> checkAndSaveData());
+    }
+
+    private void checkAndSaveData() {
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId = currentUser.getUid();
+        DatabaseReference userRef = databaseReference.child(userId);
+
+        // Retrieve existing data from Firebase
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onClick(View view) {
-                saveUserData();
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String existingName = snapshot.child("name").getValue(String.class);
+                String existingContact = snapshot.child("contact").getValue(String.class);
+                String existingHistory = snapshot.child("history").getValue(String.class);
+
+                // Get user input
+                String name = editTextName.getText().toString().trim();
+                String contact = editTextContact.getText().toString().trim();
+                String message = editTextMessage.getText().toString().trim();
+                String history = editTextHistory.getText().toString().trim();
+
+                // Check if all fields are empty
+                boolean isAllEmpty = TextUtils.isEmpty(name) && TextUtils.isEmpty(contact)
+                        && TextUtils.isEmpty(history) && TextUtils.isEmpty(message);
+
+                if (isAllEmpty && (existingName == null && existingContact == null && existingHistory == null)) {
+                    Toast.makeText(ProfileActivity.this, "Please fill in at least one field", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // If some fields are empty, show a confirmation dialog
+                if (TextUtils.isEmpty(name) || TextUtils.isEmpty(contact) || TextUtils.isEmpty(history)) {
+                    showConfirmationDialog(userRef, name, contact, history, message);
+                } else {
+                    saveData(userRef, name, contact, history, message);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(ProfileActivity.this, "Error accessing database: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void saveUserData() {
-        String name = editTextName.getText().toString().trim();
-        String contact = editTextContact.getText().toString().trim();
-        String message = editTextMessage.getText().toString().trim();
-        String history = editTextHistory.getText().toString().trim();
-
-        if (name.isEmpty() || contact.isEmpty() || message.isEmpty() || history.isEmpty()) {
-            Toast.makeText(this, "Semua field harus diisi!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Simpan atau update data di Firebase menggunakan UID pengguna saat ini
-        UserProfile userProfile = new UserProfile(name, contact, message, history);
-        databaseReference.setValue(userProfile)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(ProfileActivity.this, "Data berhasil disimpan!", Toast.LENGTH_SHORT).show();
-                        // Kembali ke MainActivity
-                        Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        finish(); // Tutup ProfileActivity
-                    } else {
-                        Toast.makeText(ProfileActivity.this, "Gagal menyimpan data!", Toast.LENGTH_SHORT).show();
-                    }
-                });
+    private void showConfirmationDialog(DatabaseReference userRef, String name, String contact, String history, String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Incomplete Data")
+                .setMessage("Some fields are not filled. Do you want to save anyway?")
+                .setPositiveButton("Yes", (dialog, which) -> saveData(userRef, name, contact, history, message))
+                .setNegativeButton("No", null)
+                .show();
     }
 
-    // Model untuk menyimpan data
-    public static class UserProfile {
-        public String name, contact, message, history;
+    private void saveData(DatabaseReference userRef, String name, String contact, String history, String message) {
+        // Update profile fields
+        if (!TextUtils.isEmpty(name)) userRef.child("name").setValue(name);
+        if (!TextUtils.isEmpty(contact)) userRef.child("contact").setValue(contact);
+        if (!TextUtils.isEmpty(history)) userRef.child("history").setValue(history);
 
-        public UserProfile() {
+        // Save message if provided
+        if (!TextUtils.isEmpty(message)) {
+            String timestamp = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).format(new Date());
+            userRef.child("messages").child(timestamp).child("message").setValue(message);
         }
 
-        public UserProfile(String name, String contact, String message, String history) {
-            this.name = name;
-            this.contact = contact;
-            this.message = message;
-            this.history = history;
-        }
+        Toast.makeText(this, "Data saved successfully", Toast.LENGTH_SHORT).show();
     }
 }

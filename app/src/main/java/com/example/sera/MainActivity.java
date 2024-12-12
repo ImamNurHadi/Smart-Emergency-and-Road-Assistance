@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -307,15 +308,37 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             int temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
             float celsiusTemperature = temperature / 10.0f; // Convert to Celsius
-            temperatureText.setText("Battery Temperature: " + celsiusTemperature + "°C");
 
+            // Update teks dan warna
+            temperatureText.setText("Battery Temperature: " + celsiusTemperature + "°C");
+            updateBatteryTemperatureColor(celsiusTemperature);
+
+            // Suhu lebih dari 45°C, mainkan suara alarm
             if (celsiusTemperature > 45) {
                 if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
                     mediaPlayer.start();
                 }
+            } else {
+                // Hentikan pemutaran media jika suhu turun di bawah 45°C
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                }
             }
         }
     };
+
+    // Metode untuk memperbarui warna teks suhu baterai
+    private void updateBatteryTemperatureColor(float temperature) {
+        if (temperature >= 25 && temperature <= 35) {
+            temperatureText.setTextColor(Color.parseColor("#00FF00")); // Hijau
+        } else if (temperature > 35 && temperature <= 40) {
+            temperatureText.setTextColor(Color.parseColor("#FFFF00")); // Kuning
+        } else if (temperature > 40) {
+            temperatureText.setTextColor(Color.parseColor("#FF0000")); // Merah
+        } else {
+            temperatureText.setTextColor(Color.parseColor("#808080")); // Abu-abu
+        }
+    }
 
     // Gyroscope event listener
     private final SensorEventListener gyroListener = new SensorEventListener() {

@@ -43,8 +43,13 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -580,11 +585,50 @@ public class MainActivity extends AppCompatActivity {
 
             // Directly set the message with latitude and longitude
             String locationMessage = "Help, I'm at (" + latitude + ", " + longitude + "). I found a love!";
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
             try {
+                // Send SMS
                 SmsManager smsManager = SmsManager.getDefault();
                 smsManager.sendTextMessage(PHONE_NUMBER, null, locationMessage, null, null);
                 Toast.makeText(this, "Help message sent to " + PHONE_NUMBER, Toast.LENGTH_SHORT).show();
+
+                // Save accident data to Firebase
+                DatabaseReference accidentsRef = FirebaseDatabase.getInstance().getReference("accidents");
+                String accidentId = accidentsRef.push().getKey(); // Generate unique key for accident
+
+                if (accidentId != null) {
+                    DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String name = snapshot.child("name").getValue(String.class);
+                            String history = snapshot.child("history").getValue(String.class);
+
+                            // Create accident data
+                            HashMap<String, Object> accidentData = new HashMap<>();
+                            accidentData.put("userId", userId);
+                            accidentData.put("name", name != null ? name : "Unknown");
+                            accidentData.put("history", history != null ? history : "No history");
+                            accidentData.put("location", new HashMap<String, Object>() {{
+                                put("latitude", latitude);
+                                put("longitude", longitude);
+                            }});
+                            accidentData.put("timestamp", System.currentTimeMillis());
+
+                            // Save to "accidents"
+                            accidentsRef.child(accidentId).setValue(accidentData)
+                                    .addOnSuccessListener(aVoid -> Toast.makeText(MainActivity.this, "Accident info saved.", Toast.LENGTH_SHORT).show())
+                                    .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Failed to save accident info: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            Toast.makeText(MainActivity.this, "Failed to fetch user data: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
             } catch (Exception e) {
                 Toast.makeText(this, "Failed to send SMS: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
